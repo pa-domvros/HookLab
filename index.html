@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HookLab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Using the "Creative Spark" color palette */
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC; /* Cool Off-White */
+            color: #475569; /* Slate Gray */
+        }
+        .font-pacifico {
+            font-family: 'Pacifico', cursive;
+        }
+        .hook-card, .gym-card {
+            transition: all 0.3s ease-in-out;
+        }
+        .hook-card {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        .hook-card.show {
+            transform: scale(1);
+            opacity: 1;
+        }
+        .feedback-card {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .option-btn.correct {
+            background-color: #D1FAE5; /* Green-100 */
+            border-color: #10B981; /* Green-500 */
+        }
+        .option-btn.incorrect {
+            background-color: #FEE2E2; /* Red-100 */
+            border-color: #EF4444; /* Red-500 */
+        }
+        .nav-tab {
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            color: #475569; /* Slate Gray */
+            border-bottom: 3px solid transparent;
+            text-align: center;
+        }
+        .nav-tab.active {
+            color: #FF6B6B; /* Vibrant Coral */
+            border-bottom-color: #FF6B6B;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+             .nav-tab {
+                padding: 0.75rem 1.5rem;
+            }
+        }
+        .flowchart-node {
+            border: 2px solid;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            font-weight: 600;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .flowchart-arrow {
+            font-size: 2rem;
+            line-height: 1;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-3xl">
+
+        <!-- Header Section -->
+        <header class="text-center mb-10 md:mb-12">
+            <img src="1.jpg" alt="HookLab Logo" class="w-40 h-40 md:w-48 md:h-48 mx-auto mb-4 rounded-full shadow-lg object-cover" onerror="this.onerror=null;this.src='https://placehold.co/192x192/FF6B6B/FFFFFF?text=HookLab';">
+            <h1 class="text-5xl md:text-7xl font-pacifico text-[#073B4C]">HookLab</h1>
+            <p class="text-md text-slate-500 mt-2">Your Personal Studio for Crafting the Perfect Hook</p>
+            <p class="text-md text-slate-500 italic mt-2">Devised by Panagiotis Domvros, English and Drama Teacher</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="flex justify-center border-b border-slate-200 mb-8">
+            <div id="nav-gym" class="nav-tab active">Hook Gym</div>
+            <div id="nav-lab" class="nav-tab">Hook Lab</div>
+            <div id="nav-infographic" class="nav-tab">Infographic</div>
+        </nav>
+
+        <main id="main-content">
+            <!-- Hook Gym -->
+            <div id="page-gym" class="bg-white p-4 md:p-8 rounded-lg shadow-md">
+                <div class="text-center">
+                    <h2 class="text-xl md:text-2xl font-bold text-[#073B4C] mb-2">The Hook Gym</h2>
+                    <p class="text-slate-600 mb-6 px-2">Test your skills. Read the scenario and choose the best hook for the job.</p>
+                </div>
+                <div id="gym-content" class="gym-card">
+                    <!-- Gym challenge will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Hook Lab Generator -->
+            <div id="page-lab" class="hidden bg-white p-4 md:p-8 rounded-lg shadow-md">
+                <div class="text-center">
+                    <h2 class="text-xl md:text-2xl font-bold text-[#073B4C] mb-2">The Hook Lab</h2>
+                    <p class="text-slate-600 mb-6 px-2">Select a goal and generate an attention-grabbing sentence instantly.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div class="md:col-span-2">
+                        <label for="category-select" class="block text-sm font-medium text-slate-700 mb-1">Choose a Goal / Tone</label>
+                        <select id="category-select" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-[#FF6B6B] focus:border-[#FF6B6B]"></select>
+                    </div>
+                    <div>
+                         <button id="generate-btn" class="w-full bg-[#FF6B6B] hover:bg-opacity-90 text-white font-bold py-3 px-6 rounded-lg transition-all shadow">Generate Hook</button>
+                    </div>
+                </div>
+                <div id="hook-display-area" class="mt-8"></div>
+            </div>
+            
+            <!-- Infographic Page -->
+            <div id="page-infographic" class="hidden space-y-12">
+                 <section id="overview" class="bg-white p-4 md:p-8 rounded-lg shadow-md">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold text-[#073B4C] mb-4">The 6 Pillars of Persuasion</h2>
+                            <p class="text-slate-600 mb-4">The 30 attention-grabbing sentences analyzed here are evenly distributed across six distinct psychological categories. Each category represents a different strategy for capturing a reader's interest, from creating urgency to sparking curiosity.</p>
+                            <div class="text-center mt-6">
+                                <span class="text-7xl font-bold text-[#118AB2]"> </span>
+                                <span class="block text-xl text-slate-500"> </span>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="chart-container">
+                                <canvas id="categoryDonutChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="deep-dive" class="bg-white p-4 md:p-8 rounded-lg shadow-md">
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl md:text-3xl font-bold text-[#073B4C]">A Deep Dive into Hook Strategies</h2>
+                        <p class="mt-2 text-slate-600 max-w-2xl mx-auto">Each category serves a unique purpose. Explore the sentences that define each strategy.</p>
+                    </div>
+                    <div id="deep-dive-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Content generated by JS -->
+                    </div>
+                </section>
+
+                <section id="analysis" class="bg-white p-4 md:p-8 rounded-lg shadow-md">
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl md:text-3xl font-bold text-[#073B4C]">Psychological Impact Analysis</h2>
+                        <p class="mt-2 text-slate-600 max-w-2xl mx-auto">This radar chart compares each category across key impact metrics. Use this to match your message's tone to your desired audience reaction.</p>
+                    </div>
+                    <div class="chart-container" style="max-width: 600px; height: 400px;">
+                        <canvas id="impactRadarChart"></canvas>
+                    </div>
+                </section>
+
+                <section id="application" class="bg-white p-4 md:p-8 rounded-lg shadow-md">
+                    <div class="text-center mb-12">
+                        <h2 class="text-2xl md:text-3xl font-bold text-[#073B4C]">How to Choose Your Hook</h2>
+                        <p class="mt-2 text-slate-600 max-w-2xl mx-auto">Follow this simple decision path to select the most effective type of sentence for your specific goal.</p>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 items-center">
+                            <div class="flowchart-node border-[#FF6B6B]">To Challenge Beliefs</div>
+                            <div class="flex items-center justify-center"><span class="flowchart-arrow transform rotate-90 md:rotate-0">→</span></div>
+                            <div class="flowchart-node bg-[#FF6B6B] text-white">Use "Bold & Provocative"</div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 items-center">
+                            <div class="flowchart-node border-[#FFD166]">To Drive Immediate Action</div>
+                            <div class="flex items-center justify-center"><span class="flowchart-arrow transform rotate-90 md:rotate-0">→</span></div>
+                            <div class="flowchart-node bg-[#FFD166] text-slate-900">Use "Urgent & Action-Oriented"</div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 items-center">
+                            <div class="flowchart-node border-[#06D6A0]">To Create Mystery</div>
+                            <div class="flex items-center justify-center"><span class="flowchart-arrow transform rotate-90 md:rotate-0">→</span></div>
+                            <div class="flowchart-node bg-[#06D6A0] text-white">Use "Curiosity-Driven"</div>
+                        </div>
+                         <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4 items-center">
+                            <div class="flowchart-node border-[#118AB2]">To Build Connection</div>
+                            <div class="flex items-center justify-center"><span class="flowchart-arrow transform rotate-90 md:rotate-0">→</span></div>
+                            <div class="flowchart-node bg-[#118AB2] text-white">Use "Personal & Relatable"</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center mt-16 text-sm text-slate-500">
+            <p>✨ Devised by Panagiotis Domvros, English and Drama Teacher, All Rights Reserved ✨</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const hookData = {
+            categories: [
+                { name: "Bold & Provocative", color: "#FF6B6B", sentences: ["What if everything you believe is wrong?", "They told me I'd fail—and I almost did.", "This one mistake cost me everything.", "Stop scrolling—this might just change your life.", "You're not going to like what I'm about to say."] },
+                { name: "Urgent & Action-Oriented", color: "#FFD166", sentences: ["Don't do this until you read this.", "You have 10 seconds to decide.", "Time's running out—and so are your options.", "This opportunity won't wait for you.", "If you're not doing this yet, you're already behind."] },
+                { name: "Curiosity-Driven", color: "#06D6A0", sentences: ["Nobody talks about this, but they should.", "I bet you've never heard this before.", "Here's a secret most people never figure out.", "The weirdest thing happened to me yesterday...", "Ever wonder what happens when you don't give up?"] },
+                { name: "Personal & Relatable", color: "#118AB2", sentences: ["I used to feel exactly like you.", "It started with a single decision.", "I never thought I'd share this, but here it is.", "This is for the ones who feel like giving up.", "I've been where you are—and I know the way out."] },
+                { name: "Thought-Provoking", color: "#073B4C", sentences: ["If time is money, are you broke or wealthy?", "What would you do if fear didn't exist?", "Are we asking the wrong questions?", "How far would you go for what you believe?", "What's more important: being right or being real?"] },
+                { name: "Controversial & Challenging", color: "#64748b", sentences: ["Success is overrated—here's what matters more.", "Motivation is a myth. Do this instead.", "You're not tired—you're unaligned.", "Hard work is a trap if you're doing the wrong thing.", "Most people won't get this—and that's the problem."] }
+            ],
+            gymScenarios: [
+                // Bold & Provocative (10)
+                { scenario: "You're starting a blog post that challenges a common industry 'best practice'.", correctAnswer: "Bold & Provocative", explanation: "To challenge a reader's beliefs, you need a hook that is direct and makes them question their assumptions.", example: "Why 'Best Practices' Are Holding You Back" },
+                { scenario: "You are launching a marketing campaign for a product that is completely different from anything else on the market.", correctAnswer: "Bold & Provocative", explanation: "A provocative statement highlights the novelty and disruptive nature of your product.", example: "You've been doing it wrong this whole time." },
+                { scenario: "You want to write a LinkedIn post about a hard lesson you learned from a business failure.", correctAnswer: "Bold & Provocative", explanation: "This hook is vulnerable and shocking, making people stop and pay attention to the story.", example: "I lost $50,000, and it was the best thing that ever happened to me." },
+                { scenario: "You are creating an ad for a fitness program that promises radical results.", correctAnswer: "Bold & Provocative", explanation: "A bold claim grabs the attention of people who are looking for a major change.", example: "Everything you know about fitness is a lie." },
+                { scenario: "You're designing a presentation slide to introduce a groundbreaking new company strategy.", correctAnswer: "Bold & Provocative", explanation: "It immediately signals that a major, important shift is about to be discussed.", example: "In one year, our company will be unrecognizable." },
+                { scenario: "You are writing a YouTube video title about a common mistake people make.", correctAnswer: "Bold & Provocative", explanation: "This hook creates fear of missing out (FOMO) and a desire to see if one is making the mistake.", example: "The one mistake that's costing you success." },
+                { scenario: "You're opening a speech at a conference with a counterintuitive idea.", correctAnswer: "Bold & Provocative", explanation: "It wakes up the audience and makes them reconsider their own views from the very beginning.", example: "I'm here to tell you that your biggest strength is actually your weakness." },
+                { scenario: "You are writing an article to expose a myth in your industry.", correctAnswer: "Bold & Provocative", explanation: "This hook positions you as an expert who is revealing a hidden truth.", example: "The 'Rule of X' is a complete myth." },
+                { scenario: "You're creating a pop-up on a website to stop visitors from leaving.", correctAnswer: "Bold & Provocative", explanation: "A direct, startling message is needed to interrupt the user's action of closing the tab.", example: "Before you go, let me ask you one question." },
+                { scenario: "You are writing the first line of a book that deals with a sensitive topic.", correctAnswer: "Bold & Provocative", explanation: "It sets a powerful tone and immediately engages the reader in the core conflict of the story.", example: "It wasn't the crime that broke our family; it was the silence." },
+                
+                // Urgent & Action-Oriented (10)
+                { scenario: "You are writing a subject line for an email announcing a critical, time-sensitive security update.", correctAnswer: "Urgent & Action-Oriented", explanation: "This situation requires immediate action, so creating a sense of urgency is the most effective strategy.", example: "ACTION REQUIRED: Critical Security Update" },
+                { scenario: "You are creating a banner for a 24-hour flash sale on a website.", correctAnswer: "Urgent & Action-Oriented", explanation: "Time-based scarcity is a powerful motivator for immediate purchase decisions.", example: "Flash Sale Ends in 3 Hours!" },
+                { scenario: "You're writing a text message to remind someone of an appointment in one hour.", correctAnswer: "Urgent & Action-Oriented", explanation: "The message needs to be clear, direct, and focused on the impending event.", example: "Your appointment is in 1 hour. See you soon!" },
+                { scenario: "You are crafting a call-to-action button for a limited-stock product.", correctAnswer: "Urgent & Action-Oriented", explanation: "This hook emphasizes scarcity and encourages users to act before the opportunity is gone.", example: "Claim Yours Before It's Gone" },
+                { scenario: "You're writing an ad for a webinar that starts tomorrow.", correctAnswer: "Urgent & Action-Oriented", explanation: "The focus is on the deadline to register, creating pressure to sign up now.", example: "Last chance to register! Webinar is tomorrow." },
+                { scenario: "You are creating a warning label for a piece of equipment.", correctAnswer: "Urgent & Action-Oriented", explanation: "Safety messages must be direct and command immediate attention to prevent harm.", example: "Warning: Disconnect power before servicing." },
+                { scenario: "You're writing a social media post about a contest deadline.", correctAnswer: "Urgent & Action-Oriented", explanation: "A clear deadline motivates followers to stop scrolling and submit their entry.", example: "Contest closes at midnight! Enter now." },
+                { scenario: "You are writing the final sentence of a sales page to encourage a decision.", correctAnswer: "Urgent & Action-Oriented", explanation: "This hook pushes the potential customer to make a choice rather than leaving the page to 'think about it'.", example: "Don't wait. Make the change today." },
+                { scenario: "You're creating a notification for an app that requires an immediate update.", correctAnswer: "Urgent & Action-Oriented", explanation: "The message must convey the importance and necessity of the action.", example: "Update now for essential new features." },
+                { scenario: "You are writing a subject line for an invoice that is past due.", correctAnswer: "Urgent & Action-Oriented", explanation: "The subject line needs to be direct and clearly state the required action to ensure it gets opened.", example: "Invoice #1234 Overdue - Please Remit Payment" },
+
+                // Curiosity-Driven (10)
+                { scenario: "You want to write an article about a little-known historical fact.", correctAnswer: "Curiosity-Driven", explanation: "The goal is to create a knowledge gap and make the reader want to learn the secret you're promising to reveal.", example: "The Secret History of the World's First Computer" },
+                { scenario: "You are writing an email teaser for an upcoming product launch.", correctAnswer: "Curiosity-Driven", explanation: "Hinting at something new without revealing it builds anticipation and encourages opens.", example: "Something new is coming..." },
+                { scenario: "You're creating a YouTube title about a surprising scientific discovery.", correctAnswer: "Curiosity-Driven", explanation: "This hook makes a promise of revealing information that the viewer doesn't have.", example: "Scientists Found Something Strange at the Bottom of the Ocean" },
+                { scenario: "You are writing a blog post about a common household item with a surprising use.", correctAnswer: "Curiosity-Driven", explanation: "It piques interest by suggesting a hidden potential in something familiar.", example: "The one thing in your kitchen you're not using correctly." },
+                { scenario: "You're starting a podcast episode about a mysterious unsolved crime.", correctAnswer: "Curiosity-Driven", explanation: "The hook introduces a puzzle and promises to explore the details, drawing the listener in.", example: "They vanished without a trace. Here's what the police missed." },
+                { scenario: "You are writing a social media post to promote a case study.", correctAnswer: "Curiosity-Driven", explanation: "It teases the result without giving away the 'how,' making people want to click to find out.", example: "How did we triple our traffic in 30 days?" },
+                { scenario: "You're designing an ad for a travel destination that is not well-known.", correctAnswer: "Curiosity-Driven", explanation: "The hook creates intrigue around a place that the viewer has likely never considered.", example: "There's a place in Europe with no tourists. Here's where." },
+                { scenario: "You are writing the introduction to a book review.", correctAnswer: "Curiosity-Driven", explanation: "It suggests a hidden depth or a surprising twist in the book, making people want to know your take.", example: "There's a secret hidden on page 247 of this book." },
+                { scenario: "You're creating a subject line for a newsletter that contains a special tip.", correctAnswer: "Curiosity-Driven", explanation: "It implies exclusive knowledge that will give the reader an advantage.", example: "My #1 productivity hack revealed." },
+                { scenario: "You are starting a presentation with a surprising statistic.", correctAnswer: "Curiosity-driven", explanation: "A strange or unexpected fact makes the audience immediately wonder 'why?' and 'how?'.", example: "What if I told you that 80% of people in this room share the same secret?" },
+
+                // Personal & Relatable (10)
+                { scenario: "You are writing a social media post to support people who are struggling with burnout.", correctAnswer: "Personal & Relatable", explanation: "Building an emotional connection is key here. Showing empathy makes the reader feel understood.", example: "Feeling burnt out? I've been there too." },
+                { scenario: "You're writing the 'About Us' page for your small business website.", correctAnswer: "Personal & Relatable", explanation: "A personal story helps customers connect with the people behind the brand.", example: "It all started in my grandmother's kitchen." },
+                { scenario: "You are writing an email to your subscribers sharing a personal story of overcoming a challenge.", correctAnswer: "Personal & Relatable", explanation: "Vulnerability and shared experience build trust and a strong community.", example: "I never thought I'd admit this, but I was terrified." },
+                { scenario: "You're creating an ad for a product designed for busy parents.", correctAnswer: "Personal & Relatable", explanation: "This hook shows that you understand the specific struggles of your target audience.", example: "Some days, just finding matching socks is a victory." },
+                { scenario: "You are starting a speech at a graduation ceremony.", correctAnswer: "Personal & Relatable", explanation: "A shared memory or feeling connects you with every student in the audience.", example: "I remember sitting exactly where you are, wondering what comes next." },
+                { scenario: "You're writing a blog post giving advice to aspiring artists.", correctAnswer: "Personal & Relatable", explanation: "Sharing your own journey and struggles makes your advice more authentic and impactful.", example: "My first painting was a complete disaster." },
+                { scenario: "You are creating a fundraising appeal for a local charity.", correctAnswer: "Personal & Relatable", explanation: "A story about a single, relatable person is more powerful than abstract statistics.", example: "Meet Sarah. She just wants her kids to be warm this winter." },
+                { scenario: "You're writing a product description for a comfort item, like a weighted blanket.", correctAnswer: "Personal & Relatable", explanation: "Focus on the feeling and the shared human need for comfort and security.", example: "For those days when you just need a hug." },
+                { scenario: "You are crafting a New Year's message for your team at work.", correctAnswer: "Personal & Relatable", explanation: "A personal reflection on the shared journey of the past year strengthens team bonds.", example: "This year, we faced some incredible challenges together." },
+                { scenario: "You're writing the introduction to a memoir.", correctAnswer: "Personal & Relatable", explanation: "This hook establishes a common ground with the reader, inviting them into your personal world.", example: "Like many of you, my story doesn't start with a grand plan." },
+
+                // Thought-Provoking (10)
+                { scenario: "You are beginning a speech intended to make the audience reflect on their personal values.", correctAnswer: "Thought-Provoking", explanation: "A philosophical or introspective question encourages the audience to look inward, setting the stage for your message.", example: "What if you were living your life for someone else?" },
+                { scenario: "You are writing a blog post about the future of artificial intelligence.", correctAnswer: "Thought-Provoking", explanation: "This hook prompts the reader to consider the deeper implications of a complex topic.", example: "Will a robot ever be truly 'alive'?" },
+                { scenario: "You're creating a discussion prompt for a book club.", correctAnswer: "Thought-Provoking", explanation: "An open-ended question encourages deeper analysis and debate among the members.", example: "Was the main character a hero or a villain?" },
+                { scenario: "You are writing an essay about environmental ethics.", correctAnswer: "Thought-Provoking", explanation: "This hook forces the reader to confront a difficult moral question.", example: "Do we owe anything to future generations?" },
+                { scenario: "You're designing a museum exhibit about the concept of time.", correctAnswer: "Thought-Provoking", explanation: "A philosophical question makes visitors engage with the exhibit on a more profound level.", example: "If you could stop time, what would you do?" },
+                { scenario: "You are writing a LinkedIn article about career choices.", correctAnswer: "Thought-Provoking", explanation: "This hook encourages professionals to think beyond the practical and consider the purpose behind their work.", example: "Are you building a career or just a resume?" },
+                { scenario: "You're starting a workshop on creativity and innovation.", correctAnswer: "Thought-Provoking", explanation: "It challenges a fundamental assumption and opens the participants' minds to new ideas.", example: "Is it possible to have a truly original idea?" },
+                { scenario: "You are writing a script for a documentary about social media.", correctAnswer: "Thought-Provoking", explanation: "This hook raises questions about the psychological impact of the topic.", example: "Is social media connecting us or just making us more lonely?" },
+                { scenario: "You're creating a tagline for a non-profit focused on education.", correctAnswer: "Thought-Provoking", explanation: "A powerful question can summarize the entire mission of the organization.", example: "What is the price of an uneducated mind?" },
+                { scenario: "You are writing a journal prompt for a self-help app.", correctAnswer: "Thought-Provoking", explanation: "This hook is designed to trigger deep self-reflection in the user.", example: "What is a belief you hold that you've never questioned?" },
+
+                // Controversial & Challenging (10)
+                { scenario: "You are writing a tweet to argue against a popular opinion in your field.", correctAnswer: "Controversial & Challenging", explanation: "This approach directly confronts a prevailing idea, which grabs the attention of those who agree and disagree.", example: "Unpopular opinion: Customer feedback is killing your innovation." },
+                { scenario: "You're writing a blog post to debunk a common productivity hack.", correctAnswer: "Controversial & Challenging", explanation: "A direct challenge to a widely accepted idea positions you as a contrarian expert.", example: "The 5 AM club is a scam. Here's why." },
+                { scenario: "You are starting a debate with a provocative statement.", correctAnswer: "Controversial & Challenging", explanation: "This kind of hook is designed to polarize and spark immediate discussion.", example: "Hard work is irrelevant to success." },
+                { scenario: "You're creating an ad campaign designed to make people rethink their brand loyalty.", correctAnswer: "Controversial & Challenging", explanation: "It directly challenges the user's current behavior and choices.", example: "You think you're loyal. You're actually just comfortable." },
+                { scenario: "You are writing an article arguing that a traditional career path is obsolete.", correctAnswer: "Controversial & Challenging", explanation: "This hook confronts a deeply ingrained societal norm.", example: "A college degree is the most expensive mistake you can make." },
+                { scenario: "You're crafting a YouTube video essay with a strong, contrarian thesis.", correctAnswer: "Controversial & Challenging", explanation: "It promises a debate and a fresh perspective, which is highly engaging.", example: "Why 'follow your passion' is terrible advice." },
+                { scenario: "You are writing a headline for an opinion piece in a newspaper.", correctAnswer: "Controversial & Challenging", explanation: "A challenging headline generates clicks from people who both agree and strongly disagree.", example: "Our city's biggest problem isn't traffic, it's us." },
+                { scenario: "You're starting a company meeting to announce a difficult, unpopular change.", correctAnswer: "Controversial & Challenging", explanation: "A direct, challenging statement prepares the team for a serious conversation.", example: "What we're doing today is no longer working." },
+                { scenario: "You are designing a T-shirt with a slogan meant to spark conversation.", correctAnswer: "Controversial & Challenging", explanation: "The goal is to create a wearable statement that makes people stop and think.", example: "Be less certain." },
+                { scenario: "You're writing a book about the downsides of a popular technology.", correctAnswer: "Controversial & Challenging", explanation: "This hook immediately sets up a conflict with the reader's likely positive perception.", example: "Your smartphone is making you weaker." }
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- NAVIGATION ---
+            const navGym = document.getElementById('nav-gym');
+            const navLab = document.getElementById('nav-lab');
+            const navInfographic = document.getElementById('nav-infographic');
+            const pageGym = document.getElementById('page-gym');
+            const pageLab = document.getElementById('page-lab');
+            const pageInfographic = document.getElementById('page-infographic');
+
+            function setupNav() {
+                navGym.addEventListener('click', () => showPage('gym'));
+                navLab.addEventListener('click', () => showPage('lab'));
+                navInfographic.addEventListener('click', () => showPage('infographic'));
+            }
+
+            function showPage(pageName) {
+                pageGym.classList.add('hidden');
+                pageLab.classList.add('hidden');
+                pageInfographic.classList.add('hidden');
+                navGym.classList.remove('active');
+                navLab.classList.remove('active');
+                navInfographic.classList.remove('active');
+
+                if (pageName === 'gym') {
+                    pageGym.classList.remove('hidden');
+                    navGym.classList.add('active');
+                } else if (pageName === 'lab') {
+                    pageLab.classList.remove('hidden');
+                    navLab.classList.add('active');
+                } else if (pageName === 'infographic') {
+                    pageInfographic.classList.remove('hidden');
+                    navInfographic.classList.add('active');
+                }
+            }
+
+            // --- HOOK LAB ---
+            const categorySelect = document.getElementById('category-select');
+            const generateBtn = document.getElementById('generate-btn');
+            const displayArea = document.getElementById('hook-display-area');
+
+            function initLab() {
+                hookData.categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.name;
+                    option.textContent = category.name;
+                    categorySelect.appendChild(option);
+                });
+                generateBtn.addEventListener('click', generateHook);
+            }
+
+            function generateHook() {
+                const selectedCategoryName = categorySelect.value;
+                const category = hookData.categories.find(c => c.name === selectedCategoryName);
+                if (!category) return;
+                const sentences = category.sentences;
+                const randomIndex = Math.floor(Math.random() * sentences.length);
+                displayHook(sentences[randomIndex]);
+            }
+
+            function displayHook(hook) {
+                displayArea.innerHTML = '';
+                const card = document.createElement('div');
+                card.className = 'hook-card bg-slate-50 border border-slate-200 p-6 rounded-lg relative';
+                card.innerHTML = `<p id="hook-text" class="text-xl md:text-2xl font-medium text-center text-[#073B4C]">${hook}</p><button id="copy-btn" class="absolute top-2 right-2 bg-[#FFD166] text-[#073B4C] font-bold py-1 px-3 rounded-md text-sm hover:bg-opacity-90 transition-all">Copy</button><div id="copy-feedback" class="absolute bottom-2 right-2 text-xs text-slate-500 opacity-0 transition-opacity">Copied!</div>`;
+                displayArea.appendChild(card);
+                document.getElementById('copy-btn').addEventListener('click', () => {
+                    const textToCopy = document.getElementById('hook-text').innerText;
+                    const textArea = document.createElement('textarea');
+                    textArea.value = textToCopy;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        const feedback = document.getElementById('copy-feedback');
+                        if (feedback) {
+                            feedback.style.opacity = '1';
+                            setTimeout(() => { feedback.style.opacity = '0'; }, 1500);
+                        }
+                    } catch (err) { console.error('Failed to copy text: ', err); }
+                    document.body.removeChild(textArea);
+                });
+                setTimeout(() => card.classList.add('show'), 10);
+            }
+
+            // --- HOOK GYM ---
+            const gymContent = document.getElementById('gym-content');
+            let currentChallenge = null;
+
+            function initGym() {
+                loadChallenge();
+            }
+
+            function loadChallenge() {
+                const randomIndex = Math.floor(Math.random() * hookData.gymScenarios.length);
+                currentChallenge = hookData.gymScenarios[randomIndex];
+                const correctOption = currentChallenge.example;
+                const distractors = hookData.gymScenarios.filter(s => s.example !== correctOption).sort(() => 0.5 - Math.random()).slice(0, 2).map(s => s.example);
+                const options = [correctOption, ...distractors].sort(() => 0.5 - Math.random());
+
+                gymContent.innerHTML = `
+                    <div class="bg-slate-50 border border-slate-200 p-4 md:p-6 rounded-lg mb-6">
+                        <p class="text-sm font-medium text-slate-500 mb-2">SCENARIO</p>
+                        <p class="text-lg text-center font-semibold text-[#073B4C]">${currentChallenge.scenario}</p>
+                    </div>
+                    <div id="gym-options" class="space-y-3">
+                        ${options.map(o => `<button class="option-btn w-full text-left p-3 rounded-lg border-2 border-slate-200 hover:border-[#FF6B6B] transition-all">${o}</button>`).join('')}
+                    </div>
+                    <div id="gym-feedback" class="mt-4"></div>`;
+                document.querySelectorAll('.option-btn').forEach(b => b.addEventListener('click', handleGymAnswer));
+            }
+
+            function handleGymAnswer(e) {
+                const selectedAnswer = e.target.innerText.trim();
+                const correctAnswer = currentChallenge.example;
+                const isCorrect = selectedAnswer === correctAnswer;
+                document.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.disabled = true;
+                    if (btn.innerText.trim() === correctAnswer) btn.classList.add('correct');
+                    if (btn.innerText.trim() === selectedAnswer && !isCorrect) btn.classList.add('incorrect');
+                });
+                displayGymFeedback(isCorrect, currentChallenge.explanation, currentChallenge.example);
+            }
+
+            function displayGymFeedback(isCorrect, explanation, example) {
+                const feedbackContainer = document.getElementById('gym-feedback');
+                const feedbackCard = document.createElement('div');
+                feedbackCard.className = `feedback-card p-4 rounded-lg text-white ${isCorrect ? 'bg-green-500' : 'bg-red-500'}`;
+                feedbackCard.innerHTML = `
+                    <h4 class="font-bold text-lg">${isCorrect ? 'Correct!' : 'Not Quite.'}</h4>
+                    <p class="text-sm text-white/90">${explanation}</p>
+                    <div class="mt-3 pt-3 border-t border-white/30">
+                        <p class="text-sm text-white/80">The best hook was:</p>
+                        <p class="mt-1 font-semibold italic">"${example}"</p>
+                    </div>
+                    <button id="next-challenge-btn" class="w-full mt-4 bg-white/20 hover:bg-white/30 font-semibold py-2 px-4 rounded-lg transition-all">Next Challenge</button>`;
+                feedbackContainer.appendChild(feedbackCard);
+                document.getElementById('next-challenge-btn').addEventListener('click', loadChallenge);
+            }
+
+            // --- INFOGRAPHIC ---
+            function initInfographic() {
+                const chartColors = { red: '#FF6B6B', yellow: '#FFD166', green: '#06D6A0', blue: '#118AB2', darkBlue: '#073B4C', slate: '#64748b' };
+                
+                // Populate Deep Dive Section
+                const deepDiveContent = document.getElementById('deep-dive-content');
+                if (deepDiveContent.children.length === 0) { // Only populate once
+                    hookData.categories.forEach(category => {
+                        const card = document.createElement('div');
+                        card.innerHTML = `
+                            <h3 class="text-xl font-bold mb-3" style="color: ${category.color};">${category.name}</h3>
+                            <ul class="space-y-2 text-slate-700 list-disc list-inside">
+                                ${category.sentences.map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                        `;
+                        deepDiveContent.appendChild(card);
+                    });
+                }
+
+
+                const wrapLabel = (str, maxWidth) => {
+                    if (str.length <= maxWidth) return str;
+                    const words = str.split(' ');
+                    let lines = [], currentLine = words[0];
+                    for (let i = 1; i < words.length; i++) {
+                        if (currentLine.length + words[i].length + 1 < maxWidth) currentLine += ' ' + words[i];
+                        else { lines.push(currentLine); currentLine = words[i]; }
+                    }
+                    lines.push(currentLine);
+                    return lines;
+                };
+        
+                const tooltipTitleCallback = (tooltipItems) => {
+                    const item = tooltipItems[0];
+                    let label = item.chart.data.labels[item.dataIndex];
+                    return Array.isArray(label) ? label.join(' ') : label;
+                };
+
+                if (window.donutChart instanceof Chart) {
+                    window.donutChart.destroy();
+                }
+                const donutCtx = document.getElementById('categoryDonutChart').getContext('2d');
+                window.donutChart = new Chart(donutCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: hookData.categories.map(c => wrapLabel(c.name.replace(' & ', ' & \n'), 20)),
+                        datasets: [{
+                            label: 'Number of Sentences',
+                            data: [5, 5, 5, 5, 5, 5],
+                            backgroundColor: Object.values(chartColors),
+                            borderColor: '#ffffff',
+                            borderWidth: 3,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, cutout: '60%',
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { size: 12 }, padding: 15, boxWidth: 15 } },
+                            tooltip: { callbacks: { title: tooltipTitleCallback } }
+                        }
+                    }
+                });
+
+                if (window.radarChart instanceof Chart) {
+                    window.radarChart.destroy();
+                }
+                const radarCtx = document.getElementById('impactRadarChart').getContext('2d');
+                window.radarChart = new Chart(radarCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Urgency', 'Intrigue', 'Emotion', 'Challenge'],
+                        datasets: [
+                            { label: 'Bold & Provocative', data: [5, 8, 7, 9], borderColor: chartColors.red, backgroundColor: 'rgba(255, 107, 107, 0.2)', pointBackgroundColor: chartColors.red },
+                            { label: 'Urgent & Action-Oriented', data: [10, 6, 4, 5], borderColor: chartColors.yellow, backgroundColor: 'rgba(255, 209, 102, 0.2)', pointBackgroundColor: chartColors.yellow },
+                            { label: 'Curiosity-Driven', data: [3, 10, 5, 4], borderColor: chartColors.green, backgroundColor: 'rgba(6, 214, 160, 0.2)', pointBackgroundColor: chartColors.green },
+                            { label: 'Personal & Relatable', data: [2, 4, 10, 2], borderColor: chartColors.blue, backgroundColor: 'rgba(17, 138, 178, 0.2)', pointBackgroundColor: chartColors.blue },
+                            { label: 'Controversial & Challenging', data: [4, 7, 6, 10], borderColor: chartColors.slate, backgroundColor: 'rgba(100, 116, 139, 0.2)', pointBackgroundColor: chartColors.slate }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { tooltip: { callbacks: { title: tooltipTitleCallback } } },
+                        scales: {
+                            r: {
+                                angleLines: { color: '#e2e8f0' }, grid: { color: '#e2e8f0' },
+                                pointLabels: { font: { size: 14, weight: 'bold' }, color: '#1e293b' },
+                                ticks: { backdropColor: '#f8fafc', color: '#64748b' },
+                                suggestedMin: 0, suggestedMax: 10
+                            }
+                        }
+                    }
+                });
+            }
+
+            // --- START THE APP ---
+            setupNav();
+            initLab();
+            initGym();
+            initInfographic();
+        });
+    </script>
+</body>
+</html>
